@@ -27,7 +27,7 @@
       height: 30px;
       background: #ddd;
       border-radius: 15px;
-      margin: 0 auto;
+      margin: 0 auto 2rem auto;
       overflow: hidden;
     }
     #bar {
@@ -36,6 +36,11 @@
       background: #c0392b;
       border-radius: 15px 0 0 15px;
       transition: width 1s ease-out;
+    }
+    #chart-container {
+      width: 80%;
+      max-width: 600px;
+      margin: 2rem auto;
     }
   </style>
 </head>
@@ -47,22 +52,34 @@
     <div id="bar"></div>
   </div>
 
+  <div id="chart-container">
+    <canvas id="categoryChart" width="400" height="400"></canvas>
+  </div>
+
+  <!-- Chart.js library -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <script>
-    const rawSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmgHtycR_r6ysEqMSggWCUo0vl1DVBhjoPeazkZJSpRTxu7xo7tBAG57L2u4zYQAu1UtrIYiRIENyW/pub?gid=0&single=true&output=csv";
-    const sheetUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(rawSheetUrl);
+    // Google Sheet CSV links (published)
+    const rawTotalUrl = "YOUR_SUM_CELL_CSV_LINK_HERE"; // single total number (optional if you sum in JS)
+    const rawCategoriesUrl = "YOUR_CATEGORIES_CSV_LINK_HERE"; // sheet with Category,Amount
+
+    const totalUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(rawTotalUrl);
+    const categoriesUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(rawCategoriesUrl);
 
     let currentTotal = 0;
-    let maxValue = 50000; // starting maximum for scaling the bar
+    let maxValue = 50000; // starting maximum for bar scaling
+    let chart = null;
 
     async function fetchTotal() {
       try {
-        const response = await fetch(sheetUrl);
+        const response = await fetch(totalUrl);
         const text = await response.text();
         const targetTotal = parseFloat(text.replace(/[^\d.-]/g, "")) || 0;
 
-        // dynamically increase maxValue if needed
+        // dynamically scale bar if total exceeds maxValue
         if (targetTotal > maxValue) {
-          maxValue = targetTotal * 1.2; // 20% buffer
+          maxValue = targetTotal * 1.2;
         }
 
         animateTotal(currentTotal, targetTotal);
@@ -74,30 +91,28 @@
       }
     }
 
+    async function fetchCategories() {
+      try {
+        const response = await fetch(categoriesUrl);
+        const csv = await response.text();
+        const rows = csv.trim().split("\n").slice(1); // skip header
+        const labels = [];
+        const data = [];
+        rows.forEach(row => {
+          const [category, amount] = row.split(",");
+          labels.push(category);
+          data.push(parseFloat(amount) || 0);
+        });
+        return { labels, data };
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        return { labels: [], data: [] };
+      }
+    }
+
     function animateTotal(from, to) {
-      const duration = 1000; // animation duration in ms
+      const duration = 1000;
       const startTime = performance.now();
 
       function update(currentTime) {
         const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const value = Math.round(from + (to - from) * progress);
-        document.getElementById("total").textContent = `-$${value.toLocaleString()}`;
-        if (progress < 1) {
-          requestAnimationFrame(update);
-        }
-      }
-
-      requestAnimationFrame(update);
-    }
-
-    function updateBar(total) {
-      const percent = Math.min(total / maxValue * 100, 100);
-      document.getElementById("bar").style.width = percent + "%";
-    }
-
-    fetchTotal();
-    setInterval(fetchTotal, 60000); // refresh every minute
-  </script>
-</body>
-</html>
