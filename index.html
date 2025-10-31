@@ -61,8 +61,8 @@
 
   <script>
     // Google Sheet CSV links (published)
-    const rawTotalUrl = "YOUR_SUM_CELL_CSV_LINK_HERE"; // single total number (optional if you sum in JS)
-    const rawCategoriesUrl = "YOUR_CATEGORIES_CSV_LINK_HERE"; // sheet with Category,Amount
+    const rawTotalUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmgHtycR_r6ysEqMSggWCUo0vl1DVBhjoPeazkZJSpRTxu7xo7tBAG57L2u4zYQAu1UtrIYiRIENyW/pub?gid=0&single=true&output=csv"; // single total number (optional if you sum in JS)
+    const rawCategoriesUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmgHtycR_r6ysEqMSggWCUo0vl1DVBhjoPeazkZJSpRTxu7xo7tBAG57L2u4zYQAu1UtrIYiRIENyW/pub?gid=0&single=true&output=csv"; // sheet with Category,Amount
 
     const totalUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(rawTotalUrl);
     const categoriesUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(rawCategoriesUrl);
