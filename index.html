@@ -48,4 +48,56 @@
   </div>
 
   <script>
-    const rawSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQm
+    const rawSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmgHtycR_r6ysEqMSggWCUo0vl1DVBhjoPeazkZJSpRTxu7xo7tBAG57L2u4zYQAu1UtrIYiRIENyW/pub?gid=0&single=true&output=csv";
+    const sheetUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(rawSheetUrl);
+
+    let currentTotal = 0;
+    let maxValue = 50000; // starting maximum for scaling the bar
+
+    async function fetchTotal() {
+      try {
+        const response = await fetch(sheetUrl);
+        const text = await response.text();
+        const targetTotal = parseFloat(text.replace(/[^\d.-]/g, "")) || 0;
+
+        // dynamically increase maxValue if needed
+        if (targetTotal > maxValue) {
+          maxValue = targetTotal * 1.2; // 20% buffer
+        }
+
+        animateTotal(currentTotal, targetTotal);
+        updateBar(targetTotal);
+        currentTotal = targetTotal;
+      } catch (error) {
+        document.getElementById("total").textContent = "Error loading total";
+        console.error(error);
+      }
+    }
+
+    function animateTotal(from, to) {
+      const duration = 1000; // animation duration in ms
+      const startTime = performance.now();
+
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const value = Math.round(from + (to - from) * progress);
+        document.getElementById("total").textContent = `-$${value.toLocaleString()}`;
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    function updateBar(total) {
+      const percent = Math.min(total / maxValue * 100, 100);
+      document.getElementById("bar").style.width = percent + "%";
+    }
+
+    fetchTotal();
+    setInterval(fetchTotal, 60000); // refresh every minute
+  </script>
+</body>
+</html>
