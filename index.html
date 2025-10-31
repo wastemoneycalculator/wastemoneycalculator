@@ -1,20 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Total Wasted Marketing Dollars</title>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      text-align: center;
-      padding: 3rem 1rem;
-      background: #fafafa;
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Total Wasted Marketing Dollars</title>
+<style>
+  body { font-family: system-ui, sans-serif; text-align:center; padding:3rem 1rem; background:#fafafa; }
+  h1 { font-size:2rem; margin-bottom:1rem; }
+  #total { font-size:3rem; font-weight:bold; color:#c0392b; margin-bottom:2rem; }
+  #bar-container { width:80%; max-width:600px; height:30px; background:#ddd; border-radius:15px; margin:0 auto 2rem; overflow:hidden; }
+  #bar { height:100%; width:0%; background:#c0392b; border-radius:15px 0 0 15px; transition: width 1s ease-out; }
+  #chart-container { width:80%; max-width:600px; margin:2rem auto; }
+</style>
+</head>
+<body>
+<h1>Total Wasted Marketing Dollars</h1>
+<div id="total">-$0</div>
+<div id="bar-container"><div id="bar"></div></div>
+<div id="chart-container"><canvas id="categoryChart" width="400" height="400"></canvas></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const rawUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmgHtycR_r6ysEqMSggWCUo0vl1DVBhjoPeazkZJSpRTxu7xo7tBAG57L2u4zYQAu1UtrIYiRIENyW/pub?gid=0&single=true&output=csv";
+const sheetUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(rawUrl);
+
+let currentTotal = 0;
+let maxValue = 50000;
+let chart = null;
+
+async function fetchData() {
+  try {
+    const response = await fetch(sheetUrl);
+    const csv = await response.text();
+
+    // Clean CSV: remove \r and extra quotes, split rows
+    const rows = csv.replace(/\r/g,'').trim().split("\n");
+    const labels = [];
+    const data = [];
+    let total = 0;
+
+    for (let i=1; i<rows.length; i++) {
+      let row = rows[i].trim();
+      if (!row) continue;
+      row = row.replace(/^"|"$/g,''); // remove quotes
+      const cols = row.split(",");
+      if (cols.length < 2) continue;
+      const category = cols[0].trim();
+      const amount = parseFloat(cols[1].trim()) || 0;
+      labels.push(category);
+      data.push(amount);
+      total += amount;
     }
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-    }
-    #total {
-      font-size: 3rem;
-      font-
+
+    if (total > maxValue) maxValue = total * 1.2;
+
+    animateTotal(currentTotal, total);
+    updateBar(total);
+    updateChart(labels, data);
+    currentTotal = total;
+
+  } catch(err) {
+    document.getElementById("total").textContent = "Error loading total";
+    console.error(err);
+  }
+}
+
+function animateTotal(from, to) {
+  const duration = 1000;
+  const startTime = performance.now();
+  function update(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed/duration,1);
+    const value = Math.round(from + (to-from)*progress);
+    document.getElementById("total").textContent = `-$${value.toLocaleString()}`;
+    if(progress<1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+function updateBar(total) {
+  const percent = Math.min(total/maxValue*100,100);
+  document.getElementById("bar").style.width = percent + "%";
+}
+
+function updateChart(labels,data) {
+  const ctx = document.getElementById('categoryChart').getContext('2d');
+  if(chart){
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = data;
+    chart.update();
+  } else {
+    chart = new Chart(ctx,{
+      type:'pie',
+      data:{ labels:labels, datasets:[{ data:data, backgroundColor:['#c0392b','#e74c3c','#f39c12','#d35400','#9b59b6','#3498db'] }] },
+      options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } }
+    });
+  }
+}
+
+// initial fetch + refresh every minute
+fetchData();
+setInterval(fetchData,60000);
+</script>
+</body>
+</html>
