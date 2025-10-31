@@ -8,45 +8,44 @@
     body {
       font-family: system-ui, sans-serif;
       text-align: center;
-      padding-top: 5rem;
+      padding: 3rem 1rem;
       background: #fafafa;
     }
     h1 {
-      font-size: 1.8rem;
+      font-size: 2rem;
       margin-bottom: 1rem;
     }
     #total {
       font-size: 3rem;
       font-weight: bold;
       color: #c0392b;
+      margin-bottom: 2rem;
+    }
+    #bar-container {
+      width: 80%;
+      max-width: 600px;
+      height: 30px;
+      background: #ddd;
+      border-radius: 15px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+    #bar {
+      height: 100%;
+      width: 0%;
+      background: #c0392b;
+      border-radius: 15px 0 0 15px;
+      transition: width 1s ease-out;
     }
   </style>
 </head>
 <body>
   <h1>Total Wasted Marketing Dollars</h1>
-  <div id="total">Loading...</div>
+  <div id="total">-$0</div>
+
+  <div id="bar-container">
+    <div id="bar"></div>
+  </div>
 
   <script>
-    // Your published Google Sheet CSV link
-    const rawSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmgHtycR_r6ysEqMSggWCUo0vl1DVBhjoPeazkZJSpRTxu7xo7tBAG57L2u4zYQAu1UtrIYiRIENyW/pub?gid=0&single=true&output=csv";
-
-    // CORS proxy to allow fetch from GitHub Pages
-    const sheetUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(rawSheetUrl);
-
-    async function fetchTotal() {
-      try {
-        const response = await fetch(sheetUrl);
-        const text = await response.text();
-        const total = parseFloat(text.replace(/[^\d.-]/g, "")) || 0;
-        document.getElementById("total").textContent = `-$${total.toLocaleString()}`;
-      } catch (error) {
-        document.getElementById("total").textContent = "Error loading total";
-        console.error(error);
-      }
-    }
-
-    fetchTotal();
-    setInterval(fetchTotal, 60000); // refresh every minute
-  </script>
-</body>
-</html>
+    const rawSheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQm
